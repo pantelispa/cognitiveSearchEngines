@@ -1,3 +1,5 @@
+# This function calculates the score of cross validation results.
+
 judge <- function(theData,predictions){
     numbers <- seq(1,length(theData[,1]),1)
     allPairs <- combn(numbers,2)
