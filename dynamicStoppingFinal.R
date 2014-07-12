@@ -1,36 +1,30 @@
 dynamicStoppingFinal.R
 
 library(MASS)
-# rm(list = ls())
+rm(list = ls())
 
 #setwd("/Users/analytis/Dropbox/Active learning, Selection bias/Final format")
 #setwd("/home/mpib/analytis/Datasets")
 
 # The alternative algorithm.
 
-setwd("/Users/pantelispa/Desktop/Datasets/RepeatedChoice/ReadytoImport")
+setwd("/Users/pantelispa/Desktop/RepeatedChoice/ReadytoImport")
 
-
-EW <- function(memory, dataset){
-      corTable <- cor(memory)  
-      corTable[is.na(corTable)] <- 0  # test for negative correlations. 
-      corTable2 <- corTable[2:length(corTable[,1]),1]
-      corTable2[corTable2 > 0] <- 0
-      corTable2[corTable2 < 0] <- -1 
-      values <- abs(corTable2 + t(dataset[2:length(dataset[1,])])) # set the lowest attribute value as highest. 
-      values <- t(values)
-      final <- rowSums(values)  # Sum all the attributes. 
-      return(final)}
-
+ExpectedValue <- function(x, s, u) {
+  roll <- rnorm(1000000,x,s)
+  expected <- mean(roll[roll > u]) - u
+  probability <- length(which(roll> u))/1000000
+  return(expected*probability)
+}
 
 exper <- function(x){return((x-exploit)*dnorm(x,predMean2,standardDeviation))} # the function that calculates the returns from sampling one more alternative.
 
 dataNames <- list.files(path = ".")
 p <- 1
 
-for (p in 8:12){
+for (p in 1:3){
     
-     setwd("/Users/pantelispa/Desktop/Datasets/RepeatedChoice/ReadytoImport")
+     setwd("/Users/pantelispa/Desktop/RepeatedChoice/ReadytoImport")
      theDataset <- read.csv(dataNames[p], header = TRUE, sep = ",")
 
      # prepare the environment
@@ -150,7 +144,6 @@ for (p in 8:12){
             # The SA model
 
             test <- cor(trainingSet, method = "kendall")
-            test[is.na(test)] <- 0
             v <- which(abs(test[1,2:length(trainingSet)]) == max(abs(test[1,2:length(trainingSet)])))
             if(length(v) > 1){v <- sample(v)[1]}
             singleAttribute <- lm(as.formula(paste( "X1 ~ X", v + 1, sep = "")),data = trainingSet)

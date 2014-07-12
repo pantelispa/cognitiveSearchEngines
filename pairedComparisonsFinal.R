@@ -6,14 +6,60 @@ library(MASS)
 
 # Import the real data
 
-setwd("/Users/pantelispa/Desktop/RepeatedChoice/ReadytoImport")
+setwd("/Users/pantelispa/Desktop/Datasets/RepeatedChoice/ReadytoImport")
 
 dataNames <- list.files(path = ".")
 p <- 1
 
+judge <- function(theData,predictions){
+    numbers <- seq(1,length(theData[,1]),1)
+    allPairs <- combn(numbers,2)
+    theJudgment1 <- theData[allPairs[1,],1] - theData[allPairs[2,],1]
+    theJudgment1[theJudgment1 < 0] <- -1 
+    theJudgment1[theJudgment1 >= 0] <- 1 
+    theJudgment2 <- as.vector(predictions[allPairs[1,]]) - as.vector(predictions[allPairs[2,]])
+    theJudgment2[theJudgment2 < 0] <- -1 
+    theJudgment2[theJudgment2 >= 0] <- 1
+    theJudge <- theJudgment1 - theJudgment2
+    scoreJudge <- sum(theJudge == 0)/length(theJudgment1)
+    return(scoreJudge)
+}
+
+judgeRecommender <- function(theData,predictions){
+    numbers <- seq(1,length(theData[,1]),1)
+    allPairs <- combn(numbers,2)
+    theJudgment1 <- theData[allPairs[1,],1] - theData[allPairs[2,],1]
+    theJudgment1[theJudgment1 < 0] <- -1 
+    theJudgment1[theJudgment1 > 0] <- 1
+    index <- which(theJudgment1 == 0)
+    if (length(index) > 0){
+    theJudgment1[index] <- sample(c(-1,1),length(theJudgment1[index]),replace = TRUE)}
+    theJudgment2 <- as.vector(predictions[allPairs[1,]]) - as.vector(predictions[allPairs[2,]])
+    theJudgment2[theJudgment2 < 0] <- -1 
+    theJudgment2[theJudgment2 > 0] <- 1
+    index2 <- which(theJudgment2 == 0)
+    if (length(index2) > 0){
+    theJudgment2[index2] <- sample(c(-1,1),length(theJudgment2[index2]),replace = TRUE)}
+    theJudge <- theJudgment1 - theJudgment2
+    scoreJudge <- sum(theJudge == 0)/length(theJudgment1)
+     return(scoreJudge)
+}
+
+EW <- function(memory, dataset){
+      corTable <- cor(memory)  
+      corTable[is.na(corTable)] <- 0  # test for negative correlations. 
+      corTable2 <- corTable[2:length(corTable[,1]),1]
+      corTable2[corTable2 > 0] <- 0
+      corTable2[corTable2 < 0] <- -1 
+      values <- abs(corTable2 + t(dataset[2:length(dataset[1,])])) # set the lowest attribute value as highest. 
+      values <- t(values)
+      final <- rowSums(values)  # Sum all the attributes. 
+      return(final)}
+
+
 for (p in 1:length(dataNames)){
     
-    setwd("/Users/pantelispa/Desktop/RepeatedChoice/ReadytoImport")
+    setwd("/Users/pantelispa/Desktop/Datasets/RepeatedChoice/ReadytoImport")
     theDataset <- read.csv(dataNames[p], header = TRUE, sep = ",")
 
     k <- 1
@@ -36,7 +82,7 @@ for (p in 1:length(dataNames)){
 
      # parameters of the model.
 
-    repetitions <-  1000
+    repetitions <-  10000
 
     # Set up the length of search for each dataset. Devide the sample in training and test set.
 
@@ -66,7 +112,7 @@ for (p in 1:length(dataNames)){
 
         reg <- lm(X1 ~ ., data = trainingSet)
         predictions <- predict(reg, newdata = testSet)
-        scoreMlu <- judge(testSet, predictions)
+        scoreMlu <- judgeRecommender(testSet, predictions)
 
         # Lexicographic.
 
@@ -76,7 +122,7 @@ for (p in 1:length(dataNames)){
         if(length(v) > 1){v <- sample(v)[1]}
         SA <- lm(as.formula(paste( "X1 ~ X", v + 1, sep = "")),data = trainingSet)
         predictionsSa <- predict(SA, newdata = testSet)
-        scoreSa <- judge(testSet, predictionsSa)
+        scoreSa <- judgeRecommender(testSet, predictionsSa)
 
         # Equal weights.
 
@@ -86,7 +132,7 @@ for (p in 1:length(dataNames)){
         V2 <- EW(trainingSetEw,testSetEw) # create a single cue for the training set.
         testSetEw <- as.data.frame(cbind(testSetEw[,1],V2))
         predictionsEw <- predict(equalWeighting, newdata = testSetEw)
-        scoreEw <- judge(testSetEw,predictionsEw)
+        scoreEw <- judgeRecommender(testSetEw,predictionsEw)
         
         memExploitEw[m] <-  memExploitEw[m] + scoreEw
         memExploitMlu[m] <- memExploitMlu[m] + scoreMlu
