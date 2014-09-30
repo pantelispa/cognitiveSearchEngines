@@ -1,4 +1,4 @@
-Multi attribute-utility models as cognitive search engines
+Multi-attribute utility models as cognitive search engines
 ================================================
 
 This project contains the programs used for the study Multi-attribute utility models as search engines
