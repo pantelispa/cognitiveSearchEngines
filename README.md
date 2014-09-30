@@ -1,5 +1,5 @@
-Multi-attribute-utility-models-as-search-engines
+Multi attribute-utility models as cognitive search engines
 ================================================
 
 This project contains the programs used for the study Multi-attribute utility models as search engines
-which is currently under review at the open access journal Judgment and Decision Making. 
+which was published at the open access journal Judgment and Decision Making in September 2014. 
